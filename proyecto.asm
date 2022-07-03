@@ -207,15 +207,17 @@ ingresarTelefono:
 	la $a0, numero
 	syscall
 	
-	li $v0, 5	
+	#Para leer el numero ingresado, se establece que maximo tenga 10 digitos
+	li $v0, 8
+	la $a0, buffer
+	li $a1, 11
+	
+	move $t1, $a0
 	syscall
 	
-	j validarNumero
 	jr $ra
 
-validarNumero:
-	jr $ra
-	
+
 		
 #Finaliza el programa
 done:
