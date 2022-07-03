@@ -2,11 +2,16 @@
 #----------------------------------------------
 #	t0 = Contador de monedas
 #       t1 = Numero a llamar
+#	$f5: costo de llamada por segundo
+#	$f6: costo de llamada por minuto
+#	$f7: total consumido 
+#	$f10: saldo disponible
+#	$f11: saldo disponible no modificable
 #----------------------------------------------
 
 .data
- mensaje: .asciiz "Llamada en curso ... Presione C para cancelar "
- advertencia: .asciiz "¡Le quedan menos de $0.05!"
+ mensaje: .asciiz "\nLlamada en curso ... Presione 1 para cancelar u otra tecla para continuar "
+ warning: .asciiz "¡Le quedan menos de $0.05!\n"
  llamadaFin: .asciiz "Ha terminado su llamada"
  titulo: .asciiz "\nProyecto 1er Parcial\n "
  ingreso: .asciiz "Ingrese su moneda: "
@@ -29,12 +34,15 @@
  v3: .float 0.25
  v4: .float 0.5
  v5: .float 1
+ divi: .float 100
+ min: .float 60
+ mensajeLlamada:  .asciiz "Llamada en curso ...\n"
  
 .text
 .globl main
 
 main:
-	lwc1 $f4, zeroAsFloat 
+	lwc1 $f4, zeroAsFloat 	
 	
 	#imprime isntrucciones
 	jal instrucciones
@@ -74,6 +82,14 @@ generar:
     	addi $v0, $zero, 1
      	syscall
      	
+     	add $t0, $a0, $zero    
+        mtc1 $t0, $f1
+        cvt.s.w $f2, $f1
+        add.s $f3, $f1, $f2
+        
+        lwc1 $f5, divi
+        div.s $f6,$f3,$f5     	
+     	
     	jr $ra
 
 #Simular llamada
@@ -97,16 +113,70 @@ iniciarLlamada:
 	la $a0, salto
 	syscall
 	
+	lwc1 $f12,min
+	div.s $f5,$f6,$f12 #Coste de llamada por segundo
+	li $t3,0 #segundos transcurridos
+	li $t4,0 #minutos transcurridos	
 	j simular
 
 #Simulacion
 simular:
+	li $v0,4
+	la $a0, mensajeLlamada
+	syscall
 	
+	c.le.s $f5,$f11	
+	bc1t calcular
+	jr $ra
+			
 #loopSimular: 
-calcular:
-
-
+calcular:	
+	sub.s $f11,$f11,$f5
 	
+	li $v0, 32
+	li $a0,1000
+	syscall
+	
+	add $t3,$t3,1
+
+	lwc1 $f12,v1
+	c.le.s $f11,$f12  
+	bc1t advertencia
+
+loopAdvertencia:		
+	li $t1, 60
+	div $t3,$t1
+	mfhi $s1
+		 
+	beqz $s1,aumentarMin
+	
+	j simular
+
+#Mostrar el mensaje de advertencia
+advertencia:
+	li $v0, 4
+	la $a0, warning
+	syscall
+	
+	j loopAdvertencia
+	
+	
+#Aumenta un minutos al tiempo de llamada y le pregunta al cliente si desea colgar	
+aumentarMin:
+	add $t4,$t4,1
+
+	li $v0, 4
+	la $a0, mensaje
+	syscall
+	
+	li $v0, 8
+	syscall
+		
+	beq  $v0, 1, done
+	
+	j simular
+	
+
 #Solicita el ingreso de monedas
 ingresar:	
 	li $v0, 4
@@ -183,6 +253,8 @@ seguir:
 	li $v0, 2
 	add.s $f11, $f12, $f4
 	syscall
+	
+	mov.s $f10,$f11
 	
 	#Regresas a main linea 31
 	jr $ra
