@@ -11,7 +11,7 @@
 #----------------------------------------------
 
 .data
- mensaje: .asciiz "\nLlamada en curso ... Presione 1 para cancelar u otra tecla para continuar "
+ mensaje: .asciiz "\nLlamada en curso ... Presione 1 para cancelar u otro numero para continuar "
  warning: .asciiz "¡Le quedan menos de $0.05!\n"
  llamadaFin: .asciiz "Ha terminado su llamada"
  titulo: .asciiz "\nProyecto 1er Parcial\n "
@@ -176,7 +176,7 @@ aumentarMin:
 	li $v0, 5
 	syscall
 		
-	beq  $a0, 1, done
+	beq  $v0, 1, done
 	
 	j simular
 	
@@ -316,6 +316,7 @@ done:
 	
 	#Calcular el numero de segundos
 	div $t2, $t3, 60 
+	mul $t2, $t2, 60
 	sub $t3, $t3,$t2 # $t3: numero de seg
 		
 	#Imprimir duracion con formato	
@@ -338,6 +339,32 @@ done:
 	li $v0, 1
 	la $a0, ($t3)
 	syscall	
+
+	#Nueva linea
+	li $v0, 4
+	la $a0, salto
+	syscall
 	
+	#Imprimir mensaje de costo de llamada
+	li $v0, 4
+	la $a0, cFinal
+	syscall
+	
+	li $v0, 2
+	add.s $f12, $f7, $f4
+	syscall
+
+	#Nueva linea
+	li $v0, 4
+	la $a0, salto
+	syscall
+	
+	#Imprimir mensaje de cambio
+	li $v0, 4
+	la $a0, cambio
+	syscall
+	
+	
+	#Terminar ejecución
 	li $v0,10
 	syscall	
