@@ -1,12 +1,13 @@
 #REGISTROS
 #----------------------------------------------
-#	t0 = Contador de monedas
 #       t1 = Numero a llamar
 #	$f5: costo de llamada por segundo
 #	$f6: costo de llamada por minuto
 #	$f7: total consumido 
 #	$f10: saldo disponible
 #	$f11: saldo disponible no modificable
+#	$t3 = Segundos en el telefono
+#	$t4 = Minutos en el telefono
 #----------------------------------------------
 
 .data
@@ -22,7 +23,7 @@
  cMinuto: .asciiz "Costo de llamada por minuto: \$0."
  inicio: .asciiz "¿Desea iniciar la llamada? Si[1] / No[0]: "
  cFinal: .asciiz "Costo de la llamada: \$"
- duracion: .asciiz "Duracion de la llamada"
+ duracion: .asciiz "Duracion de la llamada: "
  cambio: .asciiz "Su cambio es:"
  error: .asciiz "Moneda no valida"
  zeroAsFloat: .float 0.0
@@ -37,6 +38,7 @@
  divi: .float 100
  min: .float 60
  mensajeLlamada:  .asciiz "Llamada en curso ...\n"
+ dosPuntos: .asciiz ":"
  
 .text
 .globl main
@@ -117,6 +119,7 @@ iniciarLlamada:
 	div.s $f5,$f6,$f12 #Coste de llamada por segundo
 	li $t3,0 #segundos transcurridos
 	li $t4,0 #minutos transcurridos	
+	lwc1 $f7,zeroAsFloat
 	j simular
 
 #Simulacion
@@ -132,6 +135,7 @@ simular:
 #loopSimular: 
 calcular:	
 	sub.s $f11,$f11,$f5
+	add.s $f7,$f7,$f5
 	
 	li $v0, 32
 	li $a0,1000
@@ -293,5 +297,47 @@ ingresarTelefono:
 		
 #Finaliza el programa
 done:
-	li $v0,10
+	#Nueva linea
+	li $v0, 4
+	la $a0, salto
 	syscall
+	
+	#Imprimir mensaje de duración
+	li $v0, 4
+	la $a0, duracion
+	syscall
+	
+	#Obtener el numero de horas
+	div $t0, $t4,60 # $t0: numero de h
+	
+	#Calcular el numero de minutos
+	mul $t2, $t0,60
+	sub $t4,$t4,$t2  # $t4: numero de min
+	
+	#Calcular el numero de segundos
+	div $t2, $t3, 60 
+	sub $t3, $t3,$t2 # $t3: numero de seg
+		
+	#Imprimir duracion con formato	
+	li $v0, 1
+	la $a0, ($t0)
+	syscall	
+	
+	li $v0, 4
+	la $a0, dosPuntos
+	syscall			
+	
+	li $v0, 1
+	la $a0, ($t4)
+	syscall	
+	
+	li $v0, 4
+	la $a0, dosPuntos
+	syscall			
+
+	li $v0, 1
+	la $a0, ($t3)
+	syscall	
+	
+	li $v0,10
+	syscall	
