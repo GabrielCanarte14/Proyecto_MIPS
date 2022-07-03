@@ -169,10 +169,10 @@ aumentarMin:
 	la $a0, mensaje
 	syscall
 	
-	li $v0, 8
+	li $v0, 5
 	syscall
 		
-	beq  $v0, 1, done
+	beq  $a0, 1, done
 	
 	j simular
 	
