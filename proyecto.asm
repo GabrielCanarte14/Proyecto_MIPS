@@ -37,6 +37,7 @@
  v5: .float 1
  divi: .float 100
  min: .float 60
+ cinco: .float 5
  mensajeLlamada:  .asciiz "Llamada en curso ...\n"
  dosPuntos: .asciiz ":"
  
@@ -363,7 +364,12 @@ done:
 	li $v0, 4
 	la $a0, cambio
 	syscall
-	
+
+	lwc1 $f5, divi
+		
+	li $v0, 2
+	add.s $f12, $f11, $f4
+	syscall
 	
 	#Terminar ejecución
 	li $v0,10
