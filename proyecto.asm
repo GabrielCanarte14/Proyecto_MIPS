@@ -6,7 +6,7 @@
 #	$f7: total consumido 
 #	$f10: saldo disponible
 #	$f11: saldo disponible no modificable
-#	$t3 = Segundos en el telefono
+#	$t3 = Segundos en el telefono, 
 #	$t4 = Minutos en el telefono
 #----------------------------------------------
 
@@ -21,7 +21,7 @@
  saldo: .asciiz "\nSaldo: \$"
  numero: .asciiz "Ingrese el numero a llamar: "
  cMinuto: .asciiz "Costo de llamada por minuto: \$0."
- inicio: .asciiz "¿Desea iniciar la llamada? Si[1] / No[0]: "
+ inicio: .asciiz "�Desea iniciar la llamada?\nPara si ingrese cualquier numero.\nPara no ingrese 0.\n"
  cFinal: .asciiz "Costo de la llamada: \$"
  duracion: .asciiz "Duracion de la llamada: "
  cambio: .asciiz "Su cambio es:"
@@ -364,13 +364,23 @@ done:
 	li $v0, 4
 	la $a0, cambio
 	syscall
-
+	
+	li $t6, 5
 	lwc1 $f5, divi
-		
-	li $v0, 2
-	add.s $f12, $f11, $f4
+	
+	mul.s $f11, $f11, $f5 #el cambio x 100
+	cvt.w.s $f11, $f11 #el cambio en entero
+	mfc1 $t3, $f11 #entero en temporal
+	div $t3, $t6 #divido para tener la unidad
+	mfhi $t4 #el residuo
+	sub $t3, $t3, $t4 #obtengo el cambio final
+	
+	li $v0, 1
+	move $a0, $t3
 	syscall
 	
-	#Terminar ejecución
+	
+	
+	#Terminar ejecucion
 	li $v0,10
 	syscall	
